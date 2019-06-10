@@ -15,6 +15,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @program: xwspringmvc
@@ -55,7 +57,6 @@ public class XwSecondDispatcherServlet extends HttpServlet {
             resp.getWriter().write("404");
             return;
         }
-        System.out.println("---->"+handlerMapping);
         //获取方法的形参列表
         Class<?>[] paramTypes = handlerMapping.getParamTypes();
         Object []paramValues=new Object[paramTypes.length];
@@ -79,7 +80,12 @@ public class XwSecondDispatcherServlet extends HttpServlet {
         }
 
 
-        handlerMapping.method.invoke(handlerMapping.controller, paramValues);
+        Object message = handlerMapping.method.invoke(handlerMapping.controller, paramValues);
+        try {
+            resp.getWriter().write(message.toString());
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -93,9 +99,12 @@ public class XwSecondDispatcherServlet extends HttpServlet {
         String contextPath = req.getContextPath();
         url = url.replaceAll(contextPath,"").replaceAll("/+","/");
         for(HandlerMapping mapping:this.handlerMapping){
-            if(mapping.getUrl().equals(url)){
+            Matcher matcher=mapping.getUrl().matcher(url);
+            /*if(mapping.getUrl().equals(url)){
                 return mapping;
-            }
+            }*/
+            if(!(matcher.matches())){continue;}
+            return mapping;
         }
         return null;
     }
@@ -141,10 +150,12 @@ public class XwSecondDispatcherServlet extends HttpServlet {
                 XwRequestMapping methodAnnotation = method.getAnnotation(XwRequestMapping.class);
                 String url = ("/" + baseurl + "/" + methodAnnotation.value())
                         .replaceAll("/+", "/");
+                Pattern pattern=Pattern.compile(url);
                 //声明一个HandlerMappeing
                //简易版本操作 handlerMapping.put(url,method);
-                this.handlerMapping.add(new HandlerMapping(url,entry.getValue(),method));
-                System.out.println("Mapped:"+url+"---"+method);
+                //this.handlerMapping.add(new HandlerMapping(url,entry.getValue(),method));
+                this.handlerMapping.add(new HandlerMapping(pattern,entry.getValue(),method));
+                System.out.println("Mapped:"+pattern+"---"+method);
             }
         }
     }
@@ -255,15 +266,26 @@ public class XwSecondDispatcherServlet extends HttpServlet {
     }
     //保存一个url和一个method的关系
     public class HandlerMapping{
-        private String url;
+       // private String url;
+        //支持url正则
+        private Pattern pattern;
         private Method method;
         private Object controller;
         //形参列表 名字作为key,位置作为值
         private Map<String,Integer>paramIndexMapping;
         private Class<?>[]paramTypes;
 
-        public HandlerMapping(String url, Object controller, Method method) {
+        /*public HandlerMapping(String url, Object controller, Method method) {
             this.url = url;
+            this.method = method;
+            this.controller = controller;
+            this.paramTypes=method.getParameterTypes();
+            paramIndexMapping=new HashMap<>();
+            putParamIndexMapping(method);
+        }*/
+
+        public HandlerMapping(Pattern pattern, Object controller, Method method) {
+            this.pattern = pattern;
             this.method = method;
             this.controller = controller;
             this.paramTypes=method.getParameterTypes();
@@ -295,12 +317,12 @@ public class XwSecondDispatcherServlet extends HttpServlet {
             }
         }
 
-        public String getUrl() {
-            return url;
+        public Pattern getUrl() {
+            return pattern;
         }
 
-        public void setUrl(String url) {
-            this.url = url;
+        public void setUrl(Pattern url) {
+            this.pattern = url;
         }
 
         public Method getMethod() {

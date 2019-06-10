@@ -6,4 +6,6 @@ package com.xuwei.springmvc.web.service;
  */
 public interface StudentService {
     String hello(String name);
+
+    String findStudent(String name);
 }

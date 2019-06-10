@@ -16,4 +16,9 @@ public class StudentServiceImpl implements StudentService {
     public String hello(String name) {
         return "my name is "+name;
     }
+
+    @Override
+    public String findStudent(String name) {
+        return "controller封装resp:消息为--->"+name;
+    }
 }

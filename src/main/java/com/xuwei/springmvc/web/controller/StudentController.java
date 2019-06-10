@@ -43,4 +43,17 @@ public class StudentController {
             e.printStackTrace();
         }
     }
+
+    @XwRequestMapping("findStudent")
+    public String findStudent(@XwRequestParam("name")String name){
+        return studentService.findStudent(name);
+    }
+
+    /**
+     * 路径支持正则
+     */
+    @XwRequestMapping("regx.*")
+    public String regx(@XwRequestParam("name")String name){
+        return studentService.hello(name);
+    }
 }
