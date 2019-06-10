@@ -34,4 +34,13 @@ public class StudentController {
         }
         return null;
     }
+
+    @XwRequestMapping("add")
+    public void add(HttpServletRequest req, HttpServletResponse resp, @XwRequestParam("a")Integer a,@XwRequestParam("b")Integer b){
+        try {
+            resp.getWriter().write(a+"+"+b+"="+(a+b));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
